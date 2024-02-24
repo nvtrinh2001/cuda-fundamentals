@@ -1,0 +1,25 @@
+Uses:
+- Inter-thread communication within a block
+- Cache data to reduce redundant global memory accesses
+- Use it to improve global memory access patterns
+
+Organization:
+- 32 4-byte banks
+- can think it a 2D array: column is bank index, row is word (4-byte) index
+- the number of banks is equal to the width of the shared memory divided by the size of the data bus
+
+Performance:
+- Typically: 4 bytes per bank per 1 or 2 clocks per SM
+- shared accesses are issued per 32 threads (warp)
+- serialization: if N (out of 32) threads access different 4-byte words in the same bank, N accesses are executed serially, which means they have to wait for their turns to access
+- multicast: N threads access the same word in one fetch. Different bytes within the same word also count
+
+Example of bank conflict:
+- 32x32 shared memory array
+- Consider a warp consisting of 32 threads that simultaneously access elements along a column of the shared memory array
+- Since there are 32 threads in a warp, each thread is accessing a different row in the same column (bank)
+- When all 32 threads in a warp access different rows within the same column, they are accessing memory locations that map to the same bank
+- Since each bank can handle only one access at a time, all 32 threads in the warp attempt to access the same bank simultaneously, causing a bank conflict
+- Solution is padding, add an additional column to the shared memory array -> 32x33
+
+

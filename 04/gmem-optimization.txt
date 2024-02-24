@@ -1,0 +1,86 @@
+Memory Optimization
+
+1. GMEM Operations
+
+Loads:
+- Caching
+  - Attempts to hit in L1, then L2, then GMEM
+  - Load granularity is 128-byte line (take 128 bytes everytime fetching from memory)
+
+- Non-caching mode:
+  - Compile with –Xptxas –dlcm=cg option to nvcc
+  - Attempts to hit in L2, then GMEM
+  - Ignore L1, invalidate the line if it’s in L1 already
+  - On NVIDIA GPUs, the memory controller typically operates with a 32-byte segment size for memory transactions
+    -> Load granularity is 32-bytes
+
+Store:
+- Invalidate L1, write-back for L2
+
+2. Load Operation
+
+All instructions when requesting memory, memory operations are issued per warp (32 threads), which means that if the instruction only takes 3 threads to execute, 29 others is still requested but they do nothing
+
+Operation:
+- Threads in a warp provide memory addresses they want to access
+- Determine which lines/segments are needed in memory
+- Request the needed lines/sements
+
+Caching Load:
+
+1st case: Suppose warp requests 32 aligned, consecutive 4-byte words (128 bytes)
+-> Addresses fall within 1 cache-line
+-> Warp needs 128 bytes
+-> 128 bytes move across the memory bus on a miss
+-> Bus utilization: 100%
+-> eg: int c = a[idx];
+
+2nd case: Suppose warp requests 32 aligned, permuted 4-byte words 
+-> Addresses fall within 1 cache-line
+-> Warp needs 128 bytes
+-> 128 bytes move across the bus on a miss
+-> Bus utilization: 100%
+-> eg: int c = a[rand() % warpSize];
+
+3rd case: Suppose warp requests 32 misaligned, consecutive 4-byte words
+-> Addresses fall within 2 cache-lines
+-> Warp needs 128 bytes
+-> 256 bytes move across the bus on misses
+-> Bus utilization: 50%
+-> eg: int c = a[idx - 2];
+
+4th case: Suppose all threads in a warp request the same 4-byte word
+-> Addresses fall within a single cache-line
+-> Warp needs 4 bytes
+-> 128 bytes move across the bus on a miss
+-> Bus utilization: 3.125%
+-> eg: int c = a[40];
+
+5th case: Suppose warp requests 32 scattered 4-byte words
+-> Addresses fall within N cache-lines
+-> Warp needs 128 bytes
+-> N*128 bytes move across the bus on a miss
+-> Bus utilization: 128 / (N*128) (3.125% worst case N=32)
+-> eg: int c = a[rand()];
+
+6th case: Suppose warp requests 32 scattered 4-byte words, but we skip L1
+-> Addresses fall within N segments
+-> Warp needs 128 bytes
+-> N*32 bytes move across the bus on a miss
+-> Bus utilization: 128 / (N*32) (12.5% worst case N = 32)
+-> eg: int c = a[rand()]; –Xptxas –dlcm=cg
+
+3. GMEM OPTIMIZATION GUIDELINES
+
+Strive for perfect coalescing
+- (Align starting address - may require padding)
+- A warp should access within a contiguous region
+
+Have enough concurrent accesses to saturate the bus
+- Process several elements per thread
+  - Multiple loads get pipelined: while the GPU is waiting for the data for one element to arrive from global memory, it can start processing the data for another element 
+  - Indexing calculations can often be reused: eg: reuse the calculation of finding index
+
+- Launch enough threads to maximize throughput
+  - Latency is hidden by switching threads (warps)
+

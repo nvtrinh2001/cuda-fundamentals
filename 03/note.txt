@@ -1,0 +1,82 @@
+CUDA Optimization
+
+1. Architecture 
+
+  A number of architectures: Kepler/Maxwell/Pascal/Volta. Volta is the most used currently.
+
+  SIMD is the best computer architecture for gpus, since it allows parallelizing the process of handling data.
+
+  SIMT is an extension of SIMD, adds multithreading to SIMD to improve efficiency as there is less instruction fetchin overhead.
+
+  a. CUDA Computation Hierarchy
+    
+    Threads:
+    - A thread -- or CUDA core -- is a parallel processor that computes floating point math calculations in an Nvidia GPU.
+    - Process data
+    - Each has its own isolated memory register.
+
+    Warps:
+    - A warp contains 32 threads (usually)
+    - A warp is executed physically in parallel (SIMD) on an SM
+
+    Blocks:
+    - A grouping of CUDA cores (threads) that can be executed together in series or parallel.
+    - Current CUDA architecture caps the amount of threads per block at 1024. 
+    - Every thread in a given CUDA block can access the same shared memory.
+    - Contains 32-thread warps
+
+    Grids:
+    - Perform larger computations in parallel (e.g. those that require more than 1024 threads)
+    - No synchronization like in block-level.
+
+  b. CUDA Memory Hierarchy
+
+    Registers:
+    - On-chip memory, allocate for each thread
+    - Compiler controls the allocation of memory for this level.
+
+    Read-only memory:
+    - On-chip memory, can be used for specific tasks
+
+    L1 Cache/Shared Memory:
+    - On-chip memory, shared among threads of a block
+    - L1 cache controlled by hardware, shared memory controlled by users
+
+    L2 Cache:
+    - Can be accessed by all threads of all blocks.
+    - Still faster than global memory.
+
+    Global memory:
+    - DRAM
+    - slowest
+
+  c. Hardware representation
+
+  A thread is executed by a scalar processor (SP)
+  A thread block is executed on a multiprocessor (SM)
+  An SM can contain multiple thread blocks, but the number of thread blocks can be executed concurrently is limited by the SM resources
+  A kernel is launched as a grid of thread blocks
+
+2, Launch Configuration
+
+  Instructions are issued in order
+
+  A thread stalls when one of the operands isn’t ready:
+  - Memory read by itself doesn’t stall execution
+
+  - Latency is hidden by switching threads to utilize all computation power:
+    - GMEM latency: >100 cycles 
+    - Arithmetic latency: <100 cycles 
+
+  - Similar to pipeline and hazards in CPU
+  
+  Hiding arithmetic latency:
+  - Need ~10’s warps (~320 threads) per SM
+  - Or, latency can also be hidden with independent instructions from the same warp
+    ->if instructions never depends on the output of preceding instruction, then only 5 warps are needed, etc.
+  
+  Maximizing global memory throughput:
+  - Depends on the access pattern (refer to 04), and word size (small = faster, big = more data each fetch)
+  - Need enough memory transactions in flight to saturate the bus, aka no idle time
+  - Independent loads and stores from the same thread
+  - Loads and stores from different threads

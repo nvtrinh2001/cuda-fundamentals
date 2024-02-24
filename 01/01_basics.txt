@@ -1,0 +1,43 @@
+Heterogenerous computing: tính toán sử dụng nhiều loại processors khác nhau trên cùng một kiến trúc máy tính cùng lúc, mỗi loại processor có một nhiệm vụ khác nhau trong toàn bộ workload.
+
+Host: CPU 
+Device: GPU
+
+GPU is always connected to CPU to receive instructions
+CPU is connected to GPU using PCIe or NVLink Bus
+
+Processing flow: 
+1. Copy input from CPU memory to GPU memory
+2. Load GPU program and execute, caching data on chip for performance
+3. Copy rexults from GPU memory to CPU memory
+
+Vector addition: embarassingly independent
+
+Compiler: nvcc - compile code to run on GPU
+
+Memory Management
+Host: malloc, free, memcpy
+Device: cudaMalloc, cudaFree, cudoMemcpy
+
+thread: smallest, threads in a block execute the same task
+block: group of threads, each block handles 1 task
+grid: collection of blocks, execute the kernel in parallel
+
+blockIdx.x refers to each block, eg: 
+block 1: c[0] = a[0] + b[0] 
+block 2: c[1] = a[1] + b[1] 
+
+threadIdx.x refers to each thread in a block
+
+To refer to each index of an array with threads and blocks:
+--> index = threadIdx.x + blockIdx.x * blockDim.x
+blockDim.x is the number of threads in each block
+
+what if vector size is bigger than number of threads per block?
+--> need thread check:
+kernel: if (index < n), then add
+launch: (N + M - 1)/M, M
+
+why need threads?
+ - Communication
+ - Synchronization

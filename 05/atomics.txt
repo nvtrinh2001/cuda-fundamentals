@@ -1,0 +1,11 @@
+Atomics
+
+Merge 3 instructions: read c, add R1 & R2 to R3, store R3 to c into 1 instruction
+Facilitated by special hardware in the L2 cache
+Performance may have to suffer
+
+atomicMax/Min – choose the max (or min)
+atomicAdd/Sub – add to (or subtract from)
+atomicInc/Dec – increment (or decrement) and account for rollover/underflow
+atomicExch/CAS – swap values, or conditionally swap values
+atomicAnd/Or/Xor – bitwise ops

@@ -1,0 +1,32 @@
+1. Stencil 1D Problem
+  
+  Input:  an 1D array, a radius
+  Output: an 1D array, each element is the sum of all other elements inside the radius
+
+2. Shared Memory
+
+  __share__: a memory space located inside the processor (GPU), allow fast computing, managed by users
+
+  Shared memory is allocated per block, which means:
+
+    - all threads in the same block will use the same shared memory, and  
+    - threads of different blocks will use different shared memory space
+
+  __share__ vs __global__:
+
+    - share is backed by SRAM, allow allocating memory based on the need of application
+    - global is backed by DRAM, slower, allocate memory with fixed value
+
+3. Solve Stecil with Shared Memory
+
+  Step 1: Read (blockDim.x + 2 * radius) input elements from global memory to shared memory 
+  Step 2: Compute blockDim.x output elements
+  Step 3: Write output to global memory
+
+  Why `2 * radius`? --> halo: the nature of the stencil problem, need to load additional elements to compute
+
+4. Data Race
+
+  Since the elements have to be loaded from global memory, and each thread will act randomly on their own --> data race can happen (read before write hazard)
+
+  Need to sync --> using _syncthreads(): not compute until all data is loaded

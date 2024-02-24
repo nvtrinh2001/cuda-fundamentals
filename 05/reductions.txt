@@ -1,0 +1,17 @@
+Reduction vs Transformation
+
+Reduction: 	the shape of output is reduced compared to input
+--> each input is a thread
+Transformation: the shape of output is similar to input
+--> each output element is a thread
+
+Suppose we have a problem: find summary of all elements of an array
+
+1. Naive parallel solution
+
+*c += a[i]: cannot do this because each thread executes on its own --> no order so error result
+
+2. Solution
+
+- Atomic
+- Classical parallel reduction
