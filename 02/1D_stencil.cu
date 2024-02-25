@@ -16,7 +16,7 @@ __global__ void stencil_1d(int *in, int *out) {
     temp[lindex + BLOCK_SIZE] = in[gindex + BLOCK_SIZE];
   }
 
-  _syncthreads();
+  __syncthreads();
 
   int result = 0;
   for (int offset = -RADIUS; offset <= RADIUS; offset += 1) {

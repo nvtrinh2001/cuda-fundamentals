@@ -1,0 +1,9 @@
+Warp Shuffle Reduction
+
+Problem: result is loaded to shared memory, and store back to the variable --> take time
+Solution: add directly without shared memory
+
+Implementation:
+- In each warp: use shared memory to calculate the partial sums, until there is only 1 thread each warp
+- Inter-warp: load the result of each warp, calculate the partial sums, until there is only 1 thread each block
+- AtomicAdd: add the final result

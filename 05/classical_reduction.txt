@@ -1,0 +1,23 @@
+Classical Reduction
+
+Reasons:
+- Don't want to suffer from atomic throughput
+- Make full use of threads
+
+--> Using tree-based approach
+
+Problem: global synchronization
+- Global sync after each block produces its result
+- Once all blocks reach sync, continue recursively
+
+Solutions
+- Decompose into multiple kernels
+  - Kernel launch serves as a global synchronization point
+  - Kernel launch has low SW overhead (but not zero)
+
+- Use atomics at the end of threadblock-level reduction
+
+Solving the problem:
+- sequential addressing: each thread calculate the partial sum, using shared memory, syncthreads and for loop to calculate the whole summary
+- grid-stride loops: what if limited in threads, and the array size > 2 * number of threads? Use grid-stride loops to merge the input
+- atomicAdd: after calculate partial sums of each block, how to calculate the final result? Using atomicAdd, or write another kernel for calculation

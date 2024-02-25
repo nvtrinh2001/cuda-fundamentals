@@ -9,3 +9,7 @@ atomicAdd/Sub – add to (or subtract from)
 atomicInc/Dec – increment (or decrement) and account for rollover/underflow
 atomicExch/CAS – swap values, or conditionally swap values
 atomicAnd/Or/Xor – bitwise ops
+
+Could be used to determine next work item, queue slot, etc.
+int my_position = atomicAdd(order, 1);
+Most atomics return a value that is the “old” value that was in the location receiving the atomic update.
