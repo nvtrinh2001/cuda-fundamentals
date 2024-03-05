@@ -18,6 +18,8 @@ Solutions
 - Use atomics at the end of threadblock-level reduction
 
 Solving the problem:
-- sequential addressing: each thread calculate the partial sum, using shared memory, syncthreads and for loop to calculate the whole summary
+- sequential addressing: each thread calculate the partial sum, using shared memory, syncthreads and for loop to calculate all of them
 - grid-stride loops: what if limited in threads, and the array size > 2 * number of threads? Use grid-stride loops to merge the input
-- atomicAdd: after calculate partial sums of each block, how to calculate the final result? Using atomicAdd, or write another kernel for calculation
+- atomicAdd: after calculate partial sums of each block, how to calculate the final result? Using atomicAdd, or launch another kernel for calculation
+
+
